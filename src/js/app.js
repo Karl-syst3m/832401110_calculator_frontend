@@ -1,10 +1,10 @@
 /**
- * 应用入口：把各个视图装配起来。
+ * Application entry point: wire the individual views together.
  *
- * 各视图模块彼此不直接引用，由这里负责协调：
- *   - 计算成功后 -> 刷新历史列表（让新记录立刻出现）
- *   - 点击历史记录的「复用」-> 切回计算面板并填入表达式
- *   - 切换标签页 -> 按需懒加载该面板的数据，避免一进页面就打四个接口
+ * The view modules do not reference each other directly; coordination is handled here:
+ *   - after a successful calculation -> refresh the history list (so the new record appears immediately)
+ *   - clicking "reuse" on a history record -> switch back to the calculator panel and fill in the expression
+ *   - switching tabs -> lazy-load that panel's data on demand, instead of hitting four endpoints as soon as the page opens
  */
 
 import { config } from './config.js';
@@ -16,7 +16,7 @@ import { createConversionView } from './conversionView.js';
 import { createStatisticsView } from './statisticsView.js';
 import { createHealthIndicator } from './health.js';
 
-/** 标签页切换。 */
+/** Tab switching. */
 function setupTabs(onTabActivated) {
   const tabButtons = $$('.tabs__item');
   const panels = $$('.panel');
@@ -41,21 +41,21 @@ function setupTabs(onTabActivated) {
 }
 
 async function main() {
-  // ---- 主题 ----
+  // ---- Theme ----
   initTheme();
   $('#theme-toggle')?.addEventListener('click', () => toggleTheme());
 
-  // ---- 后端状态 ----
+  // ---- Backend status ----
   const health = createHealthIndicator();
   health.start();
 
-  // ---- 视图 ----
+  // ---- Views ----
   const conversionView = createConversionView();
   const statisticsView = createStatisticsView();
 
   const calculatorView = createCalculatorView({
     onCalculationSaved: () => {
-      // 计算成功 -> 让历史面板回到第一页重新拉取，新记录会出现在最上面。
+      // On a successful calculation -> send the history panel back to the first page to refetch, so the new record appears at the top.
       historyView.reloadFromStart();
     },
   });
@@ -66,35 +66,35 @@ async function main() {
       calculatorView.setExpression(expression);
     },
     onHistoryChanged: () => {
-      // 历史被删改后，健康指示器上的记录数也该跟着更新。
+      // After history is deleted or modified, the record count on the health indicator should update along with it.
       health.check();
     },
   });
 
   const tabs = setupTabs((tabName) => {
-    // 懒加载：只有真正切到该面板时才去请求数据。
+    // Lazy loading: data is requested only when that panel is actually switched to.
     if (tabName === 'history') historyView.load();
     if (tabName === 'statistics') statisticsView.load();
     if (tabName === 'calculator') calculatorView.focus();
   });
 
-  // ---- 页脚接口地址 ----
+  // ---- Footer API address ----
   const apiDocsLink = $('#api-docs-link');
   if (apiDocsLink) {
     apiDocsLink.href = `${config.apiBaseUrl}/health`;
     apiDocsLink.textContent = `${config.apiBaseUrl}/health`;
   }
 
-  // ---- 首次加载 ----
+  // ---- First load ----
   await conversionView.init();
   await historyView.load();
   await statisticsView.load();
   calculatorView.focus();
 
-  // 暴露到全局，便于在浏览器控制台里手动调试（例如 __calculator.history.load()）。
+  // Expose to the global scope for manual debugging in the browser console (for example __calculator.history.load()).
   window.__calculator = { config, calculatorView, historyView, conversionView, statisticsView, health };
 }
 
 main().catch((error) => {
-  console.error('前端初始化失败：', error);
+  console.error('Frontend initialization failed:', error);
 });

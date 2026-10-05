@@ -2,7 +2,7 @@
   "name": "calculator-frontend",
   "version": "1.0.0",
   "private": true,
-  "description": "前后端分离计算器系统 - 前端（原生 HTML / CSS / JavaScript，无构建步骤）",
+  "description": "Front-end/back-end separated calculator system - frontend (vanilla HTML / CSS / JavaScript, no build step)",
   "type": "module",
   "engines": {
     "node": ">=20"

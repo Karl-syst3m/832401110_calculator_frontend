@@ -1,17 +1,17 @@
 /**
- * 计算面板视图。
+ * Calculator panel view.
  *
- * ============================ 最重要的设计约束 ============================
- * 这个文件里**没有任何计算逻辑**。
+ * ============================ The most important design constraint ============================
+ * There is **no calculation logic whatsoever** in this file.
  *
- * 「按 1」「按 2」「按 +」做的事情只是往输入框里拼字符串；
- * 真正按下「=」时，它把表达式原样 POST 给 /api/calculate，
- * 然后把后端返回的 resultText 显示出来。
+ * What "press 1", "press 2" and "press +" do is merely concatenate characters into the input field;
+ * when "=" is actually pressed, it POSTs the expression as-is to /api/calculate,
+ * and then displays the resultText returned by the backend.
  *
- * 为什么必须这样？作业明确要求后端负责计算，并给了一个验收方法：
- * 把后端服务停掉，前端可以正常交互，但**不能独立得到一个有效结果**。
- * 如果这里偷偷用 Number() 或 eval 把结果算出来，那个验收测试立刻就会失败，
- * 而且属于作业里点名的扣分项。
+ * Why must it work this way? The assignment explicitly requires the backend to be responsible for calculation and gives an acceptance method:
+ * stop the backend service; the frontend can still be interacted with normally, but it **cannot obtain a valid result on its own**.
+ * If Number() or eval were quietly used here to work the result out, that acceptance test would fail immediately,
+ * and it is one of the point deductions the assignment names explicitly.
  * ========================================================================
  */
 
@@ -19,7 +19,7 @@ import { api } from './api.js';
 import { describeError } from './errorMessages.js';
 import { $, hide, show, createElement } from './dom.js';
 
-/** 允许通过键盘直接输入的字符（焦点不在输入框时生效）。 */
+/** Characters that may be typed directly from the keyboard (effective when the focus is not in the input field). */
 const DIRECT_INPUT_PATTERN = /^[0-9.+\-*/^()×÷−]$/;
 
 export function createCalculatorView({ onCalculationSaved } = {}) {
@@ -30,25 +30,25 @@ export function createCalculatorView({ onCalculationSaved } = {}) {
   const scientificToggle = $('#scientific-toggle');
   const scientificKeypad = $('#keypad-scientific');
 
-  /** 防止用户连点导致重复提交。 */
+  /** Prevent repeated clicking by the user from causing a duplicate submission. */
   let isSubmitting = false;
 
-  // ---- 输入框操作（纯字符串处理，不涉及计算）----
+  // ---- Input field operations (pure string handling, no calculation involved) ----
 
-  /** 在光标位置插入文本。若没有选中内容，就相当于在光标处追加。 */
+  /** Insert text at the caret position. If nothing is selected, this amounts to appending at the caret. */
   function insertText(text) {
     const start = expressionInput.selectionStart ?? expressionInput.value.length;
     const end = expressionInput.selectionEnd ?? expressionInput.value.length;
     expressionInput.value =
       expressionInput.value.slice(0, start) + text + expressionInput.value.slice(end);
     const nextCaret = start + text.length;
-    // 插完把光标放在新内容之后，用户可以接着输入，体验和真实计算器一致。
+    // After inserting, place the caret after the new content so the user can keep typing, matching the feel of a real calculator.
     expressionInput.setSelectionRange(nextCaret, nextCaret);
     expressionInput.focus();
     hideError();
   }
 
-  /** 退格：有选中内容就删选中，否则删光标前一个字符。 */
+  /** Backspace: delete the selection if there is one, otherwise delete the character before the caret. */
   function backspace() {
     const start = expressionInput.selectionStart ?? expressionInput.value.length;
     const end = expressionInput.selectionEnd ?? expressionInput.value.length;
@@ -82,7 +82,7 @@ export function createCalculatorView({ onCalculationSaved } = {}) {
     errorMessage.textContent = '';
   }
 
-  // ---- 提交计算：唯一与后端交互的入口 ----
+  // ---- Submit calculation: the only entry point that talks to the backend ----
 
   async function calculate() {
     if (isSubmitting) return;
@@ -99,18 +99,18 @@ export function createCalculatorView({ onCalculationSaved } = {}) {
     calculateButton.textContent = '…';
 
     try {
-      // 只把表达式发给后端，不发送任何结果。
+      // Send only the expression to the backend, never any result.
       const response = await api.calculate(expression);
 
-      // 界面上显示的结果，严格等于后端返回的字段，没有任何本地加工。
+      // The result shown in the UI is strictly the field returned by the backend, with no local processing whatsoever.
       resultOutput.textContent = response.resultText ?? String(response.result);
       resultOutput.classList.remove('is-error');
       hideError();
 
       onCalculationSaved?.(response);
     } catch (error) {
-      // 后端不可用时，这里必须显示失败，而不能退化成「本地算一个」。
-      // 这正是「前端不计算」的可验证表现。
+      // When the backend is unavailable this must display a failure, and must not degrade into "computing one locally".
+      // This is precisely the verifiable evidence that "the frontend does not calculate".
       resultOutput.textContent = '—';
       resultOutput.classList.add('is-error');
       showError(error);
@@ -121,9 +121,9 @@ export function createCalculatorView({ onCalculationSaved } = {}) {
     }
   }
 
-  // ---- 事件绑定 ----
+  // ---- Event binding ----
 
-  /** 键盘区点击：统一用事件委托，避免给二十多个按钮各绑一个监听器。 */
+  /** Keypad click: event delegation is used throughout, avoiding a separate listener bound to each of the twenty-odd buttons. */
   function handleKeypadClick(event) {
     const button = event.target.closest('button');
     if (button === null) return;
@@ -151,15 +151,15 @@ export function createCalculatorView({ onCalculationSaved } = {}) {
     keypad?.addEventListener('click', handleKeypadClick);
   }
 
-  // 科学键盘显隐
+  // Show/hide the scientific keypad
   scientificToggle?.addEventListener('click', () => {
     const willShow = scientificKeypad.hidden;
     scientificKeypad.hidden = !willShow;
     scientificToggle.setAttribute('aria-pressed', String(willShow));
-    scientificToggle.textContent = willShow ? '收起科学键盘' : '科学键盘';
+    scientificToggle.textContent = willShow ? 'Hide scientific keypad' : 'Scientific keypad';
   });
 
-  // 输入框内快捷键
+  // Keyboard shortcuts inside the input field
   expressionInput?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
@@ -170,14 +170,14 @@ export function createCalculatorView({ onCalculationSaved } = {}) {
     }
   });
 
-  // 输入框内容变化时清掉上一次的错误提示，避免提示与内容不匹配
+  // Clear the previous error message when the input content changes, so the message and the content do not disagree
   expressionInput?.addEventListener('input', hideError);
 
   /**
-   * 键盘直输（扩展功能）。
+   * Direct keyboard input (extension feature).
    *
-   * 只有当焦点不在任何输入控件上、且用户按下的是数字或运算符时才接管，
-   * 否则会和浏览器默认行为（比如在搜索框里打字）冲突。
+   * Input is taken over only when the focus is not on any input control and the key the user pressed is a digit or an operator,
+   * otherwise it would conflict with the browser's default behavior (such as typing in a search box).
    */
   document.addEventListener('keydown', (event) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -185,7 +185,7 @@ export function createCalculatorView({ onCalculationSaved } = {}) {
     const activeTag = document.activeElement?.tagName;
     if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
 
-    // 只在计算面板可见时生效
+    // Effective only while the calculator panel is visible
     if (!document.getElementById('panel-calculator')?.classList.contains('is-active')) return;
 
     if (event.key === 'Enter') {
@@ -210,7 +210,7 @@ export function createCalculatorView({ onCalculationSaved } = {}) {
   });
 
   return {
-    /** 把某个表达式放回输入框（历史记录「复用」按钮会调用） */
+    /** Put an expression back into the input field (called by the "reuse" button in the history list) */
     setExpression(text) {
       expressionInput.value = text;
       hideError();
@@ -218,7 +218,7 @@ export function createCalculatorView({ onCalculationSaved } = {}) {
       const end = text.length;
       expressionInput.setSelectionRange(end, end);
     },
-    /** 以编程方式触发一次计算 */
+    /** Trigger one calculation programmatically */
     submit: calculate,
     clear: clearAll,
     focus() {

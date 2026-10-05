@@ -1,40 +1,40 @@
 /**
- * 极简 DOM 辅助函数。
+ * Minimal DOM helper functions.
  *
- * 前端一共有十几个模块需要取元素，每个模块各写一遍
- * document.querySelector 既啰嗦又容易拼错选择器。
- * 这里只封装最常用的四个操作，刻意不做「类 jQuery」的链式封装：
- * 原生 DOM API 已经足够用，再加一层抽象只会让人多学一套规则。
+ * A dozen or so modules in the frontend need to fetch elements, and writing
+ * document.querySelector once per module is both verbose and easy to get the selector wrong in.
+ * Only the four most common operations are wrapped here, and a "jQuery-like" chained wrapper is deliberately avoided:
+ * the native DOM API is already enough, and another layer of abstraction would only make people learn one more set of rules.
  */
 
-/** 取单个元素。 */
+/** Get a single element. */
 export function $(selector, root = document) {
   return root.querySelector(selector);
 }
 
-/** 取多个元素，返回真正的数组（NodeList 没有 map/filter 的部分方法）。 */
+/** Get multiple elements and return a real array (a NodeList lacks part of the map/filter methods). */
 export function $$(selector, root = document) {
   return Array.from(root.querySelectorAll(selector));
 }
 
-/** 显示元素（配合 HTML 的 hidden 属性使用）。 */
+/** Show an element (used together with the HTML hidden attribute). */
 export function show(element) {
   if (element) element.hidden = false;
 }
 
-/** 隐藏元素。 */
+/** Hide an element. */
 export function hide(element) {
   if (element) element.hidden = true;
 }
 
 /**
- * 创建一个元素。
- * @param {string} tagName 标签名
+ * Create an element.
+ * @param {string} tagName tag name
  * @param {object} [options]
  * @param {string} [options.className]
- * @param {string} [options.text] 文本内容（走 textContent，天然防注入）
- * @param {object} [options.attrs] 其他属性
- * @param {Array<Node>} [options.children] 子节点
+ * @param {string} [options.text] text content (goes through textContent, which prevents injection by nature)
+ * @param {object} [options.attrs] other attributes
+ * @param {Array<Node>} [options.children] child nodes
  */
 export function createElement(tagName, options = {}) {
   const element = document.createElement(tagName);
@@ -51,7 +51,7 @@ export function createElement(tagName, options = {}) {
   return element;
 }
 
-/** 把一个函数延迟到「连续调用停止一段时间之后」才真正执行。 */
+/** Delay a function until "a run of consecutive calls has stopped for a period of time". */
 export function debounce(fn, delay) {
   let timer = null;
   return (...args) => {
@@ -64,10 +64,10 @@ export function debounce(fn, delay) {
 }
 
 /**
- * 把 ISO 8601 时间字符串格式化成「YYYY-MM-DD HH:mm:ss」本地时间。
+ * Format an ISO 8601 time string as local time in "YYYY-MM-DD HH:mm:ss".
  *
- * 注意：这只是时区与显示格式的转换，不是计算。
- * 后端统一以 UTC 存储时间，由前端按用户所在时区呈现，这是标准做法。
+ * Note: this is only a conversion of time zone and display format, not a calculation.
+ * The backend stores times uniformly in UTC and the frontend presents them in the user's time zone, which is standard practice.
  */
 export function formatDateTime(isoString) {
   const date = new Date(isoString);

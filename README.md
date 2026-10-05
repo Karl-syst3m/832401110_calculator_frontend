@@ -1,109 +1,109 @@
-# 计算器系统 · 前端（Calculator Frontend）
+# Calculator System · Frontend (Calculator Frontend)
 
-前后端分离架构的计算器系统**前端**。负责界面呈现、按钮与键盘交互、表达式输入、
-结果展示、历史记录展示与删除操作，以及显示后端返回的错误信息。
+The **frontend** of the front-end/back-end separated calculator system. It handles interface rendering, button and keyboard interaction, expression input,
+result display, history display and deletion, and showing the error messages returned by the backend.
 
-**本前端不做任何数值计算。** 所有计算（含进制换算与单位换算）都通过 HTTP 接口
-发给后端完成。详见 [设计要点](#设计要点)。
+**This frontend performs no numeric calculation whatsoever.** All calculations (including base conversion and unit conversion) are sent to the backend
+through HTTP endpoints. See [Design Notes](#design-notes) for details.
 
-> 本项目是软件工程课程第一次作业「前后端分离计算器系统」的前端部分。
-> 后端仓库见配套项目 `calculator_backend`。
-
----
-
-## 目录
-
-- [功能清单](#功能清单)
-- [技术栈](#技术栈)
-- [运行环境](#运行环境)
-- [安装](#安装)
-- [启动](#启动)
-- [配置说明](#配置说明)
-- [与后端的连接方式](#与后端的连接方式)
-- [界面说明](#界面说明)
-- [键盘快捷键](#键盘快捷键)
-- [项目结构](#项目结构)
-- [设计要点](#设计要点)
-- [常见问题](#常见问题)
+> This project is the frontend part of the first assignment of the Software Engineering course, "Front-end/Back-end Separated Calculator System".
+> The backend repository is the companion project `calculator_backend`.
 
 ---
 
-## 功能清单
+## Table of Contents
 
-### 必需功能
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Runtime Requirements](#runtime-requirements)
+- [Installation](#installation)
+- [Running the Project](#running-the-project)
+- [Configuration](#configuration)
+- [Backend Connection](#backend-connection)
+- [Interface Overview](#interface-overview)
+- [Keyboard Shortcuts](#keyboard-shortcuts)
+- [Project Structure](#project-structure)
+- [Design Notes](#design-notes)
+- [FAQ](#faq)
 
-| 功能 | 说明 | 实现位置 |
+---
+
+## Features
+
+### Required Features
+
+| Feature | Description | Implementation location |
 | --- | --- | --- |
-| 计算器界面 | 数字键盘、运算符、括号、退格、清空 | `src/index.html`、`src/css/style.css` |
-| 表达式输入 | 可直接键入，也可点击按钮拼接；支持光标处插入 | `src/js/calculatorView.js` |
-| 发送计算请求 | 点击 `=` 或按回车，把表达式 POST 给后端 | `src/js/api.js` |
-| 结果展示 | 显示后端返回的 `resultText`，不做任何本地加工 | `src/js/calculatorView.js` |
-| 历史记录展示 | 从后端拉取并渲染，支持分页 | `src/js/historyView.js` |
-| 删除历史记录 | 按 id 删除指定记录，删除后重新向后端拉取 | `src/js/historyView.js` |
-| 错误信息展示 | 把后端错误码翻译成中文提示 | `src/js/errorMessages.js` |
+| Calculator interface | Numeric keypad, operators, parentheses, backspace, clear | `src/index.html`, `src/css/style.css` |
+| Expression input | Can be typed directly or assembled by clicking buttons; supports insertion at the cursor | `src/js/calculatorView.js` |
+| Sending calculation requests | Click `=` or press Enter to POST the expression to the backend | `src/js/api.js` |
+| Result display | Shows the `resultText` returned by the backend, with no local processing | `src/js/calculatorView.js` |
+| History display | Fetched from the backend and rendered, supports pagination | `src/js/historyView.js` |
+| Deleting history records | Deletes a specific record by id, then re-fetches from the backend | `src/js/historyView.js` |
+| Error message display | Translates backend error codes into English messages | `src/js/errorMessages.js` |
 
-### 扩展功能
+### Extended Features
 
-| 功能 | 说明 |
+| Feature | Description |
 | --- | --- |
-| 科学键盘 | 可折叠面板：`sin` `cos` `tan` `√` `xʸ` `ln` `log` `|x|` `n!` `π` `e` `mod` `round` `max` `min` |
-| 键盘快捷键 | 支持直接键入数字运算符、回车计算、Esc 清空、退格删除、Ctrl/Cmd+D 切主题 |
-| 历史搜索 | 关键词模糊搜索（防抖 300ms） |
-| 历史分页 | 每页 10 / 20 / 50 条可选 |
-| 历史排序 | 按时间或结果排序，升序降序可切 |
-| 收藏 | 星标标记常用记录，可筛选「仅看收藏」 |
-| 复用表达式 | 一键把历史记录的表达式放回计算面板继续编辑 |
-| 进制换算 | 2 / 8 / 10 / 16 / 32 / 36 进制互转，可交换方向 |
-| 单位换算 | 8 类单位（长度、质量、面积、体积、时间、数据、速度、温度） |
-| 统计面板 | 总记录数、今日计算、收藏数、平均值、最常用表达式等 |
-| 主题切换 | 明/暗两套主题，记忆用户选择，默认跟随系统 |
-| 后端状态指示 | 周期轮询 `/api/health`，直观显示后端是否可用 |
+| Scientific keypad | Collapsible panel: `sin` `cos` `tan` `√` `xʸ` `ln` `log` `|x|` `n!` `π` `e` `mod` `round` `max` `min` |
+| Keyboard shortcuts | Type digits and operators directly, Enter to calculate, Esc to clear, Backspace to delete, Ctrl/Cmd+D to switch themes |
+| History search | Fuzzy keyword search (300 ms debounce) |
+| History pagination | 10 / 20 / 50 records per page, selectable |
+| History sorting | Sort by time or by result, ascending or descending |
+| Favorites | Star frequently used records and filter with "Favorites only" |
+| Reuse expression | Put a history record's expression back into the calculator panel for further editing in one click |
+| Base conversion | Conversion between bases 2 / 8 / 10 / 16 / 32 / 36, direction can be swapped |
+| Unit conversion | 8 unit categories (length, mass, area, volume, time, data, speed, temperature) |
+| Statistics panel | Total records, today's calculations, favorites, average value, most frequent expression, etc. |
+| Theme switching | Light and dark themes, remembers the user's choice, follows the system by default |
+| Backend status indicator | Periodically polls `/api/health` to show at a glance whether the backend is available |
 
 ---
 
-## 技术栈
+## Tech Stack
 
-| 方面 | 选型 | 说明 |
+| Aspect | Choice | Description |
 | --- | --- | --- |
-| 语言 | 原生 JavaScript（ES Module） | 无 TypeScript、无转译 |
-| 结构 | 原生 HTML5 | 语义标签 + ARIA |
-| 样式 | 原生 CSS3 | CSS 自定义属性做主题，BEM 命名 |
-| 构建工具 | **无** | 不需要 Webpack / Vite / npm install |
-| 运行时依赖 | **零** | 浏览器直接运行源码 |
-| 开发服务器 | Node 内置 `http` 模块 | `scripts/dev-server.mjs`，零依赖 |
+| Language | Vanilla JavaScript (ES Module) | No TypeScript, no transpilation |
+| Structure | Vanilla HTML5 | Semantic tags + ARIA |
+| Styling | Vanilla CSS3 | CSS custom properties for theming, BEM naming |
+| Build tooling | **None** | No Webpack / Vite / npm install required |
+| Runtime dependencies | **Zero** | The browser runs the source directly |
+| Development server | Node's built-in `http` module | `scripts/dev-server.mjs`, zero dependencies |
 
-### 为什么不用框架与构建工具？
+### Why not use a framework and build tools?
 
-作业明确说明「技术复杂度本身只占一定分数」，重点是把前后端分离做对做清楚。
-不引入框架带来三个实际好处：
+The assignment explicitly states that "technical complexity itself is only worth part of the score"; what matters is getting the front-end/back-end separation right and clear.
+Not pulling in a framework brings three practical benefits:
 
-1. **助教验收成本为零**。不需要 `npm install`、不需要装 Node 就能用任意静态服务器打开，
-   消除了「依赖装不上」这一类与作业目标无关的失败可能。
-2. **代码全部可读**。没有编译产物、没有运行时框架黑盒，
-   每一行代码在浏览器里看到的就是仓库里的那一行。
-3. **没有构建产物与源码不一致的风险**。前端仓库里只有源码。
+1. **Zero verification cost for the TA.** No `npm install` is needed, and it can be opened with any static server even without Node installed,
+   which removes a whole class of failures ("dependencies won't install") that is unrelated to the assignment's goal.
+2. **All the code is readable.** There are no build artifacts and no runtime framework black box;
+   every line you see in the browser is the line in the repository.
+3. **No risk of build output diverging from the source.** The frontend repository contains nothing but source code.
 
-代价是手写了一些本可由框架代劳的 DOM 操作。由于本项目界面规模有限
-（4 个面板、约 40 个交互元素），这个代价是可控的。
+The price is that some DOM manipulation that a framework could have handled is written by hand. Since this project's interface is limited in scale
+(4 panels, about 40 interactive elements), that price is manageable.
 
 ---
 
-## 运行环境
+## Runtime Requirements
 
-前端本身**不需要 Node.js**——它是纯静态文件，任何静态服务器都能托管。
+The frontend itself **does not need Node.js** — it is purely static files, and any static server can host it.
 
-但仓库里提供了一个零依赖的开发服务器方便本地调试，它需要 Node.js ≥ 20。
+The repository does, however, ship a zero-dependency development server for convenient local debugging, and that one requires Node.js ≥ 20.
 
-| 运行方式 | 要求 |
+| How it is run | Requirement |
 | --- | --- |
-| 用仓库自带的开发服务器 | Node.js ≥ 20 |
-| 用其他静态服务器（nginx / Python / VS Code Live Server 等） | 无要求 |
+| Using the bundled development server | Node.js ≥ 20 |
+| Using another static server (nginx / Python / VS Code Live Server, etc.) | None |
 
-> **注意：不能直接双击 `index.html` 用 `file://` 打开。**
-> 本项目使用 ES Module（`<script type="module">`），浏览器出于安全考虑
-> 禁止通过 `file://` 协议加载模块，会报 CORS 错误。必须通过 HTTP 访问。
+> **Note: you cannot simply double-click `index.html` to open it over `file://`.**
+> This project uses ES Modules (`<script type="module">`), and for security reasons browsers
+> refuse to load modules through the `file://` protocol and report a CORS error. It must be accessed over HTTP.
 
-检查 Node 版本（仅使用自带开发服务器时需要）：
+Check the Node version (only needed when using the bundled development server):
 
 ```bash
 node -v
@@ -111,79 +111,79 @@ node -v
 
 ---
 
-## 安装
+## Installation
 
-**无需安装任何依赖。**
+**No dependencies need to be installed.**
 
 ```bash
 cd calculator_frontend
-# 没有 npm install 这一步
+# there is no npm install step
 ```
 
-`package.json` 中没有任何 `dependencies`，只有两个启动脚本。
+`package.json` has no `dependencies` at all, only two start scripts.
 
 ---
 
-## 启动
+## Running the Project
 
-### 方式一：使用仓库自带的开发服务器（推荐）
+### Option 1: use the bundled development server (recommended)
 
 ```bash
 npm run dev
-# 等价于
+# equivalent to
 node scripts/dev-server.mjs
 ```
 
-默认监听 `http://127.0.0.1:5500`。指定其他端口：
+It listens on `http://127.0.0.1:5500` by default. To specify another port:
 
 ```bash
 node scripts/dev-server.mjs 8080
 ```
 
-### 方式二：使用 Python 内置服务器
+### Option 2: use Python's built-in server
 
 ```bash
 cd src
 python -m http.server 5500
 ```
 
-### 方式三：使用 nginx 托管
+### Option 3: host it with nginx
 
-把 `src/` 目录作为网站根目录，并配置 `/api` 反向代理到后端（见部署文档）。
+Use the `src/` directory as the site root and configure a reverse proxy for `/api` to the backend (see the deployment documentation).
 
-### 方式四：VS Code Live Server
+### Option 4: VS Code Live Server
 
-用 VS Code 打开 `src/` 目录，右键 `index.html` → "Open with Live Server"。
+Open the `src/` directory in VS Code, right-click `index.html` → "Open with Live Server".
 
-### 启动后确认
+### Confirming it started
 
-浏览器打开 `http://127.0.0.1:5500`，页头右上角状态灯应显示绿色的
-「后端正常 · N 条记录」。若显示红色的「后端未连接」，请检查后端是否已启动。
+Open `http://127.0.0.1:5500` in a browser; the status indicator in the top-right corner of the header should show a green
+"backend healthy · N records". If it shows a red "backend not connected", check whether the backend has been started.
 
 ---
 
-## 配置说明
+## Configuration
 
-前端的可配置项集中在一个文件：**`src/js/config.js`**。
+The frontend's configurable items are gathered in a single file: **`src/js/config.js`**.
 
-| 配置项 | 默认值 | 说明 |
+| Configuration item | Default value | Description |
 | --- | --- | --- |
-| `apiBaseUrl` | 自动推断 | 后端接口根地址，见 [与后端的连接方式](#与后端的连接方式) |
-| `requestTimeoutMs` | `10000` | 单次请求超时时间（毫秒） |
-| `healthCheckIntervalMs` | `30000` | 后端健康检查轮询间隔 |
-| `searchDebounceMs` | `300` | 历史搜索防抖延迟 |
+| `apiBaseUrl` | Inferred automatically | Root address of the backend API, see [Backend Connection](#backend-connection) |
+| `requestTimeoutMs` | `10000` | Timeout for a single request (milliseconds) |
+| `healthCheckIntervalMs` | `30000` | Polling interval of the backend health check |
+| `searchDebounceMs` | `300` | Debounce delay for history search |
 
-### 覆盖接口地址的三种方式
+### Three ways to override the API address
 
-按优先级从高到低：
+In descending order of priority:
 
-**1. URL 查询参数**（临时调试用，无需改代码）
+**1. URL query parameter** (for temporary debugging, no code change needed)
 
 ```
 http://127.0.0.1:5500/?api=http://192.168.1.100:5000/api
 ```
 
-**2. 全局变量**（在 `index.html` 的 `<head>` 中声明）
+**2. Global variable** (declared in the `<head>` of `index.html`)
 
 ```html
 <script>
@@ -191,7 +191,7 @@ http://127.0.0.1:5500/?api=http://192.168.1.100:5000/api
 </script>
 ```
 
-**3. 修改 `src/js/config.js`**（长期配置）
+**3. Editing `src/js/config.js`** (long-term configuration)
 
 ```javascript
 const LOCAL_BACKEND = 'http://127.0.0.1:5000/api';
@@ -199,139 +199,139 @@ const LOCAL_BACKEND = 'http://127.0.0.1:5000/api';
 
 ---
 
-## 与后端的连接方式
+## Backend Connection
 
 ```
-┌─────────────────────┐
-│  浏览器              │
+┌──────────────────────┐
+│  Browser             │
 │  calculator_frontend │
-│  (静态文件)          │
-└──────────┬──────────┘
+│  (static files)      │
+└──────────┬───────────┘
            │  HTTP / JSON
            │  POST /api/calculate  { "expression": "1+2*3" }
            ▼
-┌─────────────────────┐
-│  后端服务            │
+┌──────────────────────┐
+│  Backend service     │
 │  calculator_backend  │
 │  Express :5000       │
-└──────────┬──────────┘
+└──────────┬───────────┘
            │  SQL
            ▼
-┌─────────────────────┐
-│  SQLite 数据库       │
-└─────────────────────┘
+┌──────────────────────┐
+│  SQLite database     │
+└──────────────────────┘
 ```
 
-### 接口地址的自动推断规则
+### Automatic inference rules for the API address
 
-| 前端运行方式 | 推断出的接口地址 | 是否跨域 |
+| How the frontend runs | Inferred API address | Cross-origin |
 | --- | --- | --- |
-| `file://` 打开 | `http://127.0.0.1:5000/api` | 是 |
-| 本地开发端口 `5500` / `8080` / `5173` / `3000` / `8000` | `http://<同主机>:5000/api` | 是，需后端配置 CORS |
-| 其他（含 nginx 同源部署） | 同源 `/api` | 否 |
+| Opened over `file://` | `http://127.0.0.1:5000/api` | Yes |
+| Local development ports `5500` / `8080` / `5173` / `3000` / `8000` | `http://<same host>:5000/api` | Yes, the backend must configure CORS |
+| Anything else (including a same-origin nginx deployment) | Same-origin `/api` | No |
 
-> **为什么默认走同源 `/api`？**
-> 生产部署时由 nginx 把 `/api/` 反向代理到后端，前端与接口同源，
-> 浏览器不会发起跨域请求。这样既不需要配置 CORS，
-> 也不会因为写死了 IP 导致换域名后前端全部报错。
+> **Why default to the same-origin `/api`?**
+> In production, nginx reverse-proxies `/api/` to the backend, so the frontend and the API are same-origin
+> and the browser makes no cross-origin request. That way there is no need to configure CORS,
+> and hard-coding an IP will not break the entire frontend when the domain changes.
 
-### 本地联调完整步骤
+### Full local integration steps
 
 ```bash
-# 终端 A —— 启动后端
+# Terminal A -- start the backend
 cd calculator_backend
 npm install
-npm start          # 监听 http://127.0.0.1:5000
+npm start          # listens on http://127.0.0.1:5000
 
-# 终端 B —— 启动前端
+# Terminal B -- start the frontend
 cd calculator_frontend
-npm run dev        # 监听 http://127.0.0.1:5500
+npm run dev        # listens on http://127.0.0.1:5500
 ```
 
-浏览器打开 `http://127.0.0.1:5500`，输入 `1+2*3` 回车，应显示 `7`。
+Open `http://127.0.0.1:5500` in a browser, type `1+2*3` and press Enter; it should show `7`.
 
-### 数据库初始化
+### Database initialization
 
-**前端不涉及数据库。** 数据库的创建、建表与初始化全部由后端负责，
-详见后端仓库 README 的「数据库初始化」章节。
-前端只通过接口读写数据，不直接接触数据库。
-
----
-
-## 界面说明
-
-前端共四个面板，通过顶部标签页切换。
-
-### 1. 计算
-
-- **表达式输入框**：可直接键入，也可点击下方键盘拼接。支持在光标位置插入。
-- **结果区**：显示后端返回的结果。计算失败时显示 `—` 并在下方给出错误提示。
-- **科学键盘**（默认折叠）：点击「科学键盘」按钮展开。
-- **主键盘**：`C` 清空 / `(` `)` 括号 / `⌫` 退格 / 数字 / `.` / `=` / 四则运算。
-  界面显示 `×` `÷` `−`，后端会自动归一化为 `*` `/` `-`。
-
-### 2. 历史记录
-
-- 工具栏：关键词搜索、仅看收藏、排序方式、每页条数、刷新、清空全部
-- 每条记录显示：`#id`、表达式、计算时间、归一化后的表达式（若与原始输入不同）、结果
-- 三个操作按钮：`⤴` 复用表达式 / `☆` 收藏 / `🗑` 删除
-- 底部分页：上一页 / 页码信息 / 下一页
-
-### 3. 换算
-
-- **进制换算**：输入数值，选择源进制与目标进制，点击「换算」或按回车
-- **单位换算**：选择类别后，单位下拉框自动更新为该类别的可用单位
-- 两个面板都有「交换」按钮，交换源与目标后自动重算
-
-### 4. 统计
-
-以卡片形式展示后端 SQL 聚合出的九项指标。
+**The frontend does not touch the database.** Creating the database, defining its tables and initializing it are all the backend's responsibility;
+see the "Database initialization" section of the backend repository's README.
+The frontend only reads and writes data through the API and never touches the database directly.
 
 ---
 
-## 键盘快捷键
+## Interface Overview
 
-| 按键 | 功能 | 生效范围 |
+The frontend has four panels in total, switched through the tabs at the top.
+
+### 1. Calculate
+
+- **Expression input**: can be typed directly or assembled by clicking the keypad below. Supports insertion at the cursor position.
+- **Result area**: shows the result returned by the backend. When a calculation fails it shows `—` with an error message below.
+- **Scientific keypad** (collapsed by default): click the "Scientific keypad" button to expand it.
+- **Main keypad**: `C` clear / `(` `)` parentheses / `⌫` backspace / digits / `.` / `=` / the four arithmetic operations.
+  The interface displays `×` `÷` `−`, which the backend normalizes to `*` `/` `-` automatically.
+
+### 2. History
+
+- Toolbar: keyword search, favorites only, sort order, items per page, refresh, clear all
+- Each record shows: `#id`, the expression, the calculation time, the normalized expression (if it differs from the original input), the result
+- Three action buttons: `⤴` reuse expression / `☆` favorite / `🗑` delete
+- Pagination at the bottom: previous / page info / next
+
+### 3. Convert
+
+- **Base conversion**: enter a value, choose the source base and the target base, then click "Convert" or press Enter
+- **Unit conversion**: after choosing a category, the unit dropdowns update automatically to the units available in that category
+- Both panels have a "Swap" button that swaps source and target and recalculates automatically
+
+### 4. Statistics
+
+Displays the nine metrics aggregated by the backend's SQL in the form of cards.
+
+---
+
+## Keyboard Shortcuts
+
+| Key | Function | Scope |
 | --- | --- | --- |
-| `0`–`9` `.` `+` `-` `*` `/` `^` `(` `)` `×` `÷` `−` | 直接输入到表达式 | 焦点不在输入控件时，且计算面板可见 |
-| `Enter` | 计算 | 输入框内 / 计算面板可见时 |
-| `Backspace` | 退格 | 输入框内 / 计算面板可见时 |
-| `Escape` | 清空表达式 | 输入框内 / 计算面板可见时 |
-| `Ctrl` / `Cmd` + `D` | 切换明暗主题 | 全局 |
-| `Enter` | 触发换算 | 进制换算 / 单位换算的数值输入框中 |
+| `0`–`9` `.` `+` `-` `*` `/` `^` `(` `)` `×` `÷` `−` | Type directly into the expression | When focus is not in an input control and the calculator panel is visible |
+| `Enter` | Calculate | Inside the input / while the calculator panel is visible |
+| `Backspace` | Backspace | Inside the input / while the calculator panel is visible |
+| `Escape` | Clear the expression | Inside the input / while the calculator panel is visible |
+| `Ctrl` / `Cmd` + `D` | Switch between light and dark themes | Global |
+| `Enter` | Trigger a conversion | In the value inputs of base conversion / unit conversion |
 
-> 当焦点位于搜索框、下拉框等控件时，快捷键会主动让路，避免与正常的文本输入冲突。
+> When focus is in a control such as a search box or a dropdown, the shortcuts deliberately step aside to avoid conflicting with normal text input.
 
 ---
 
-## 项目结构
+## Project Structure
 
 ```
 calculator_frontend/
 ├── src/
-│   ├── index.html               # 页面结构（四个面板 + 键盘）
+│   ├── index.html               # page structure (four panels + keypad)
 │   ├── css/
-│   │   └── style.css            # 全部样式（主题变量 + BEM 组件样式）
+│   │   └── style.css            # all styles (theme variables + BEM component styles)
 │   └── js/
-│       ├── app.js               # 入口：装配各视图、标签页、懒加载
-│       ├── config.js            # ★ 唯一需要按环境改动的地方
-│       ├── api.js               # 接口封装（超时、错误归一化）
-│       ├── errorMessages.js     # 错误码 -> 中文提示
-│       ├── calculatorView.js    # 计算面板（不含任何计算逻辑）
-│       ├── historyView.js       # 历史面板
-│       ├── conversionView.js    # 换算面板
-│       ├── statisticsView.js    # 统计面板
-│       ├── health.js            # 后端状态指示
-│       ├── theme.js             # 主题切换
-│       └── dom.js               # DOM 辅助函数
+│       ├── app.js               # entry point: assembles the views, tabs, lazy loading
+│       ├── config.js            # ★ the only place that needs changing per environment
+│       ├── api.js               # API wrapper (timeouts, error normalization)
+│       ├── errorMessages.js     # error code -> English message
+│       ├── calculatorView.js    # calculator panel (contains no calculation logic at all)
+│       ├── historyView.js       # history panel
+│       ├── conversionView.js    # conversion panel
+│       ├── statisticsView.js    # statistics panel
+│       ├── health.js            # backend status indicator
+│       ├── theme.js             # theme switching
+│       └── dom.js               # DOM helper functions
 ├── scripts/
-│   └── dev-server.mjs           # 零依赖静态开发服务器
+│   └── dev-server.mjs           # zero-dependency static development server
 ├── package.json
 ├── codestyle.md
 └── README.md
 ```
 
-### 模块依赖关系
+### Module dependencies
 
 ```
 app.js
@@ -344,145 +344,144 @@ app.js
   └── statisticsView.js -> api.js, errorMessages.js, dom.js
 ```
 
-所有模块**只能通过 `api.js` 访问后端**，没有任何模块自己写 `fetch`。
-这样接口地址、超时策略、错误归一化只有一处实现。
+All modules **may only reach the backend through `api.js`**; no module writes its own `fetch`.
+That way the API address, the timeout policy and error normalization have exactly one implementation.
 
-各视图模块之间**互不引用**，由 `app.js` 负责协调（例如「计算成功后刷新历史列表」）。
+The view modules **do not reference one another**; `app.js` is responsible for coordination (for example, "refresh the history list after a successful calculation").
 
 ---
 
-## 测试
+## Testing
 
 ```bash
 npm test
 ```
 
-使用 Node 内置测试运行器，无需安装任何测试框架。
+It uses Node's built-in test runner, so no test framework has to be installed.
 
-当前覆盖的是**接口地址推断逻辑**（`src/js/config.js`），共 13 个用例：
+What it currently covers is the **API address inference logic** (`src/js/config.js`), 13 cases in total:
 
-| 分组 | 覆盖场景 |
+| Group | Scenarios covered |
 | --- | --- |
-| 本地开发 | `localhost` / `127.0.0.1` 上的 5500、8080、5173 端口 |
-| 公网部署 | 公网 IP 上的 8080、8000、9000 端口；域名的 80、443 |
-| file:// 直开 | 回落到本机 5000 |
-| 覆盖优先级 | 查询参数 > 全局变量 > 自动推断 |
+| Local development | Ports 5500, 8080 and 5173 on `localhost` / `127.0.0.1` |
+| Public deployment | Ports 8080, 8000 and 9000 on a public IP; ports 80 and 443 on a domain |
+| Opened directly over file:// | Falls back to local port 5000 |
+| Override priority | Query parameter > global variable > automatic inference |
 
-**这组测试的由来**（值得单独说明）：
-最初的实现只根据**端口号**判断是否处于本地开发环境。
-由于 8080 同时出现在开发端口列表里，当站点被部署到公网 IP 的 `:8080` 时，
-前端会误以为自己在本地开发环境，转而请求 `http://<公网IP>:5000/api`，
-造成跨域失败，并迫使后端端口必须对外开放。
+**How this test suite came about** (worth explaining separately):
+the original implementation decided whether it was in a local development environment based only on the **port number**.
+Because 8080 also appears in the list of development ports, when the site was deployed to `:8080` on a public IP,
+the frontend mistakenly believed it was in a local development environment and requested `http://<public IP>:5000/api` instead,
+which caused a cross-origin failure and forced the backend port to be exposed to the outside.
 
-修复方式是判断条件改为「主机名是本机 **且** 端口是开发端口」，
-`公网 IP 的 8080 端口 -> 同源 /api` 这个用例就是专门锁死该缺陷的回归测试。
+The fix was to change the condition to "the hostname is local **and** the port is a development port";
+the case `port 8080 on a public IP -> same-origin /api` is a regression test written specifically to pin down that defect.
 
-> 界面交互部分（点击、渲染、删除流程）目前依靠手工验收，
-> 尚未引入端到端测试。这是本项目已知的短板，已列入后续改进项。
+> The interactive parts of the interface (clicks, rendering, the deletion flow) currently rely on manual acceptance testing;
+> no end-to-end tests have been introduced yet. This is a known weak point of this project and has been listed as future work.
 
 ---
 
-## 设计要点
+## Design Notes
 
-### 1. 前端为什么不做计算
+### 1. Why the frontend does not calculate
 
-这是本作业的核心要求。前端的 `calculatorView.js` 中没有任何 `eval`、`Number()` 运算
-或算术表达式求值——按下按钮只是往输入框里拼字符串，按下 `=` 时把表达式原样发给后端，
-再把后端返回的 `resultText` 显示出来。
+This is the core requirement of this assignment. The frontend's `calculatorView.js` contains no `eval`, no `Number()` arithmetic
+and no arithmetic expression evaluation — pressing a button merely concatenates a string into the input box, and pressing `=` sends the expression to the backend as it is,
+after which the `resultText` returned by the backend is displayed.
 
-**可验证的表现**：把后端服务停掉，页面依然能正常加载、按钮依然能按、表达式依然能输入，
-但结果区只会显示 `—` 并提示「无法连接后端服务」。这直观地证明了结果确实来自后端。
+**A verifiable behavior**: stop the backend service and the page still loads normally, the buttons can still be pressed and an expression can still be typed,
+but the result area only shows `—` and reports "cannot connect to the backend service". This directly proves that the result really does come from the backend.
 
-进制换算与单位换算也遵循同一原则，全部通过接口完成，前端只渲染下拉框与结果。
+Base conversion and unit conversion follow the same principle and are carried out entirely through the API; the frontend only renders the dropdowns and the result.
 
-### 2. 用 `textContent` 而不是 `innerHTML` 渲染
+### 2. Rendering with `textContent` rather than `innerHTML`
 
-历史记录里的表达式是用户的自由输入。若用字符串拼接 `innerHTML`：
+The expressions in the history are free-form user input. If `innerHTML` were used with string concatenation:
 
 ```javascript
-// ❌ 危险写法
+// ❌ Dangerous approach
 list.innerHTML += `<li>${item.expression} = ${item.resultText}</li>`;
 ```
 
-用户只要输入 `<img src=x onerror=alert(document.cookie)>` 作为表达式，
-之后每次查看历史记录都会执行这段脚本（XSS）。
+A user only has to enter `<img src=x onerror=alert(document.cookie)>` as an expression, and from then on every visit to the history page executes that script (XSS).
 
-本项目的做法是用 `document.createElement` 逐节点构建，文本一律通过
-`textContent` 写入——它不会被解析为 HTML：
+This project's approach is to build the nodes one by one with `document.createElement`, writing all text through
+`textContent` — which is never parsed as HTML:
 
 ```javascript
-// ✅ 安全写法（src/js/dom.js 的 createElement 辅助函数）
+// ✅ Safe approach (the createElement helper in src/js/dom.js)
 createElement('div', { className: 'history-item__expression', text: item.expression })
 ```
 
-### 3. 错误码与展示文案分离
+### 3. Error codes are separated from display text
 
-后端返回与语言无关的错误码（如 `DIVISION_BY_ZERO`），
-前端在 `errorMessages.js` 里映射成中文提示。
+The backend returns language-independent error codes (such as `DIVISION_BY_ZERO`),
+and the frontend maps them to English messages in `errorMessages.js`.
 
-好处是接口不必为多语言而改动；同时提示里保留了错误码，
-方便用户截图反馈时直接定位，也方便对照网络面板排查。
+The benefit is that the API does not have to be changed for the sake of multiple languages; at the same time the message keeps the error code,
+which makes it easier to locate when a user reports a problem with a screenshot, and easier to cross-check in the network panel.
 
-### 4. 超时控制
+### 4. Timeout control
 
-`api.js` 用 `AbortController` 给每个请求加 10 秒超时。
-没有超时控制时，如果后端进程卡死但端口仍开着，
-`fetch` 可能长时间 pending，界面表现为按钮一直转圈而没有任何提示。
+`api.js` uses `AbortController` to give every request a 10-second timeout.
+Without timeout control, if the backend process hangs while the port is still open,
+`fetch` can remain pending for a long time, and the interface shows a button spinning forever with no message of any kind.
 
-### 5. 懒加载
+### 5. Lazy loading
 
-四个面板的数据按需请求：只有真正切到某个标签页时才去拉取该面板的数据。
-避免一进页面就并发打四个接口。
+The data of the four panels is requested on demand: the data of a panel is fetched only when you actually switch to that tab.
+This avoids firing four API requests concurrently as soon as the page is entered.
 
-### 6. `file://` 与 ES Module
+### 6. `file://` and ES Modules
 
-本地开发必须通过 HTTP 服务访问。这不是本项目的特殊要求，
-而是浏览器对 ES Module 的安全限制（`file://` 被视为不透明来源）。
-仓库自带的 `dev-server.mjs` 就是为了让助教不必额外装任何东西。
+Local development must be accessed through an HTTP server. This is not a special requirement of this project
+but a browser security restriction on ES Modules (`file://` is treated as an opaque origin).
+The bundled `dev-server.mjs` exists precisely so that the TA does not have to install anything extra.
 
 ---
 
-## 常见问题
+## FAQ
 
-### 打开页面一片空白，控制台报 CORS 错误
+### The page is blank when opened and the console reports a CORS error
 
-用 `file://` 双击打开了 `index.html`。必须通过 HTTP 访问：
+You double-clicked `index.html` and opened it over `file://`. It must be accessed over HTTP:
 
 ```bash
 npm run dev
-# 然后访问 http://127.0.0.1:5500
+# then visit http://127.0.0.1:5500
 ```
 
-### 状态灯显示「后端未连接」
+### The status indicator shows "backend not connected"
 
-1. 确认后端已启动：`curl http://127.0.0.1:5000/api/health`
-2. 确认后端端口是 5000（若改过，同步修改 `src/js/config.js`）
-3. 打开浏览器开发者工具的 Network 面板，查看请求是否被 CORS 拦截
+1. Confirm the backend is running: `curl http://127.0.0.1:5000/api/health`
+2. Confirm the backend port is 5000 (if you changed it, update `src/js/config.js` accordingly)
+3. Open the Network panel of the browser developer tools and check whether the request is blocked by CORS
 
-### 计算时提示「无法连接后端服务［NETWORK_ERROR］」
+### Calculating reports "cannot connect to the backend service [NETWORK_ERROR]"
 
-这通常意味着后端没有运行，或接口地址不对。这也是作业要求的验收场景之一——
-此时前端**不应该**能得出结果。
+This usually means the backend is not running, or the API address is wrong. This is also one of the acceptance scenarios required by the assignment —
+in this situation the frontend **must not** be able to produce a result.
 
-### 历史记录是空的
+### The history is empty
 
-后端数据库首次启动时是空的，需要先做一次成功的计算。
-失败的计算（如 `1/0`）不会写入历史。若需要演示数据，
-可在后端仓库执行 `npm run seed`。
+The backend database is empty the first time it starts, so one successful calculation has to happen first.
+Failed calculations (such as `1/0`) are not written to the history. If you need demo data,
+you can run `npm run seed` in the backend repository.
 
-### 删除记录后列表没变化
+### The list does not change after deleting a record
 
-正常情况下删除成功后会重新向后端拉取列表。
-若没有变化，请检查浏览器控制台是否有报错，以及后端日志中该请求的状态码。
+Normally the list is re-fetched from the backend after a successful deletion.
+If nothing changes, check whether the browser console reports an error, and check the status code of that request in the backend logs.
 
-### 修改了代码但页面没更新
+### I changed the code but the page did not update
 
-开发服务器已设置 `Cache-Control: no-store`，理论上刷新即可。
-若仍不生效，用 `Ctrl` + `F5` 强制刷新。
+The development server sets `Cache-Control: no-store`, so in theory a refresh is enough.
+If it still does not take effect, force a refresh with `Ctrl` + `F5`.
 
 ---
 
-## 相关文档
+## Related Documentation
 
-- [codestyle.md](./codestyle.md) —— 代码规范（依据 Google JavaScript Style Guide + BEM）
-- 后端仓库：`calculator_backend`
+- [codestyle.md](./codestyle.md) —— code conventions (based on the Google JavaScript Style Guide + BEM)
+- Backend repository: `calculator_backend`

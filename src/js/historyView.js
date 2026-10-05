@@ -1,14 +1,14 @@
 /**
- * 历史记录面板视图。
+ * History panel view.
  *
- * 数据全部来自 GET /api/history，页面上不保留任何「本地副本作为数据源」。
- * 删除、收藏之后一律重新向后端拉取列表，而不是在前端数组里删掉那一项。
- * 这样做的原因：如果前端自己维护一份副本，一旦后端数据被别处改动
- * （比如切换到手机端删了一条），界面就会显示过期数据。
+ * All data comes from GET /api/history, and no "local copy serving as a data source" is kept on the page.
+ * After a deletion or a favorite toggle the list is always fetched from the backend again, rather than removing that entry from a frontend array.
+ * The reason for doing this: if the frontend maintained its own copy, then as soon as the backend data were changed somewhere else
+ * (for example deleting one entry by switching to the mobile client), the UI would display stale data.
  *
- * 渲染安全性：所有用户可见文本都通过 textContent 写入，绝不使用 innerHTML。
- * 表达式是用户自由输入的字符串，若用 innerHTML 拼接，输入
- * `<img src=x onerror=alert(1)>` 就会在查看历史时触发脚本执行（XSS）。
+ * Rendering safety: all user-visible text is written through textContent, and innerHTML is never used.
+ * An expression is a string the user entered freely; if it were concatenated with innerHTML, inputting
+ * `<img src=x onerror=alert(1)>` would trigger script execution (XSS) while the history is being viewed.
  */
 
 import { api } from './api.js';
@@ -31,7 +31,7 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
   const nextButton = $('#history-next');
   const pageInfoElement = $('#history-page-info');
 
-  /** 当前查询状态。它与后端的查询参数一一对应。 */
+  /** The current query state. It corresponds one-to-one to the backend query parameters. */
   const state = {
     page: 1,
     pageSize: Number(pageSizeSelect.value) || 20,
@@ -43,11 +43,11 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
     totalPages: 0,
   };
 
-  /** 让「每页条数」在刷新后依然生效，但请求失败时不能污染界面状态。 */
+  /** Keep "items per page" in effect after a refresh, but a failed request must not pollute the UI state. */
   let lastRequestFailed = false;
 
   function renderError(error) {
-    summaryElement.textContent = `加载失败：${describeError(error)}`;
+    summaryElement.textContent = `Failed to load: ${describeError(error)}`;
     summaryElement.classList.add('is-error-text');
     lastRequestFailed = true;
   }
@@ -57,18 +57,18 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
     lastRequestFailed = false;
   }
 
-  /** 渲染一条历史记录。 */
+  /** Render one history record. */
   function renderItem(item) {
     const itemElement = createElement('li', {
       className: `history-item${item.isFavorite ? ' is-favorite' : ''}`,
     });
 
-    // ---- 左：id ----
+    // ---- Left: id ----
     itemElement.append(
       createElement('span', { className: 'history-item__id', text: `#${item.id}` }),
     );
 
-    // ---- 中：表达式与元信息 ----
+    // ---- Middle: expression and metadata ----
     const body = createElement('div', { className: 'history-item__body' });
     body.append(
       createElement('div', {
@@ -79,17 +79,17 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
 
     const meta = createElement('div', { className: 'history-item__meta' });
     meta.append(createElement('span', { text: formatDateTime(item.createdAt) }));
-    // 表达式被归一化过（例如用户输入 × 实际按 * 计算）时把归一化结果显示出来，
-    // 这是排查「我明明输的是 × 为什么结果不对」这类问题的关键线索。
+    // When the expression has been normalized (for example the user types × but it is actually computed as *), display the normalized form,
+    // which is the key clue for investigating problems such as "I definitely typed ×, so why is the result wrong?".
     if (item.normalizedExpression && item.normalizedExpression !== item.expression) {
       meta.append(
-        createElement('span', { text: `归一化后：${item.normalizedExpression}` }),
+        createElement('span', { text: `Normalized: ${item.normalizedExpression}` }),
       );
     }
     body.append(meta);
     itemElement.append(body);
 
-    // ---- 右：结果 ----
+    // ---- Right: result ----
     itemElement.append(
       createElement('span', {
         className: 'history-item__result',
@@ -97,13 +97,13 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
       }),
     );
 
-    // ---- 操作按钮 ----
+    // ---- Action buttons ----
     const actions = createElement('div', { className: 'history-item__actions' });
 
     const reuseButton = createElement('button', {
       className: 'icon-btn',
       text: '⤴',
-      attrs: { type: 'button', title: '在计算面板中复用这个表达式' },
+      attrs: { type: 'button', title: 'Reuse this expression in the calculator panel' },
     });
     reuseButton.addEventListener('click', () => onReuseExpression?.(item.expression));
 
@@ -112,7 +112,7 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
       text: item.isFavorite ? '★' : '☆',
       attrs: {
         type: 'button',
-        title: item.isFavorite ? '取消收藏' : '加入收藏',
+        title: item.isFavorite ? 'Remove from favorites' : 'Add to favorites',
       },
     });
     favoriteButton.addEventListener('click', async () => {
@@ -130,14 +130,14 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
     const deleteButton = createElement('button', {
       className: 'icon-btn icon-btn--danger',
       text: '🗑',
-      attrs: { type: 'button', title: `删除第 ${item.id} 条记录` },
+      attrs: { type: 'button', title: `Delete record ${item.id}` },
     });
     deleteButton.addEventListener('click', async () => {
       deleteButton.disabled = true;
       try {
         await api.deleteHistory(item.id);
-        // 删除之后重新向后端要一次列表。
-        // 如果这一页被删空了（比如删除最后一条），自动回退一页，避免停在空白页。
+        // After deleting, ask the backend for the list once more.
+        // If this page was emptied by deletions (for example the last entry was deleted), step back one page automatically, so the user does not sit on a blank page.
         if (listElement.children.length === 1 && state.page > 1) {
           state.page -= 1;
         }
@@ -170,26 +170,26 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
   function renderSummary(data) {
     if (data.total === 0) {
       summaryElement.textContent =
-        state.keyword !== '' || state.favoriteOnly ? '没有匹配的记录。' : '暂无计算记录。';
+        state.keyword !== '' || state.favoriteOnly ? 'No matching records.' : 'No calculation records yet.';
       return;
     }
     const rangeStart = (data.page - 1) * data.pageSize + 1;
     const rangeEnd = Math.min(data.page * data.pageSize, data.total);
-    const extra = data.filters?.keyword ? `，关键词「${data.filters.keyword}」` : '';
-    const favoriteExtra = data.filters?.favoriteOnly ? '，仅收藏' : '';
+    const extra = data.filters?.keyword ? `, keyword "${data.filters.keyword}"` : '';
+    const favoriteExtra = data.filters?.favoriteOnly ? ', favorites only' : '';
     summaryElement.textContent =
-      `共 ${data.total} 条记录，当前显示第 ${rangeStart}–${rangeEnd} 条` +
-      `（第 ${data.page} / ${Math.max(data.totalPages, 1)} 页）${extra}${favoriteExtra}`;
+      `Showing ${rangeStart}–${rangeEnd} of ${data.total} records` +
+      ` (page ${data.page} / ${Math.max(data.totalPages, 1)})${extra}${favoriteExtra}`;
   }
 
   function renderPagination(data) {
     prevButton.disabled = data.page <= 1;
     nextButton.disabled = data.totalPages === 0 || data.page >= data.totalPages;
     pageInfoElement.textContent =
-      data.totalPages === 0 ? '第 0 页 / 共 0 页' : `第 ${data.page} 页 / 共 ${data.totalPages} 页`;
+      data.totalPages === 0 ? 'Page 0 / 0' : `Page ${data.page} / ${data.totalPages}`;
   }
 
-  /** 向后端拉取历史记录并渲染。 */
+  /** Fetch the history records from the backend and render them. */
   async function load() {
     try {
       const data = await api.listHistory({
@@ -205,7 +205,7 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
       state.total = data.total;
       state.totalPages = data.totalPages;
 
-      // 删到最后一条时后端可能返回空页，这里把页码拉回到有效范围再请求一次。
+      // When the last record is deleted the backend may return an empty page; pull the page number back into the valid range and request once more.
       if (data.items.length === 0 && data.total > 0 && data.page > data.totalPages) {
         state.page = Math.max(data.totalPages, 1);
         return load();
@@ -225,9 +225,9 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
     }
   }
 
-  // ---- 事件绑定 ----
+  // ---- Event binding ----
 
-  // 搜索用防抖：每敲一个字就发一次请求既浪费也没必要。
+  // Debounce the search: sending a request on every single keystroke is both wasteful and unnecessary.
   searchInput?.addEventListener(
     'input',
     debounce(() => {
@@ -275,12 +275,12 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
 
   clearButton?.addEventListener('click', async () => {
     if (state.total === 0) {
-      summaryElement.textContent = '当前没有记录需要清空。';
+      summaryElement.textContent = 'There are no records to clear.';
       return;
     }
-    // 清空是不可逆操作，必须让用户二次确认。
+    // Clearing is an irreversible operation, so the user must confirm a second time.
     const confirmed = window.confirm(
-      `确定要清空全部 ${state.total} 条历史记录吗？此操作不可撤销，记录将从后端数据库中永久删除。`,
+      `Clear all ${state.total} history records? This operation cannot be undone, and the records will be permanently deleted from the backend database.`,
     );
     if (!confirmed) return;
 
@@ -299,7 +299,7 @@ export function createHistoryView({ onReuseExpression, onHistoryChanged } = {}) 
 
   return {
     load,
-    /** 重新从第一页加载（计算成功后调用） */
+    /** Reload from the first page (called after a successful calculation) */
     async reloadFromStart() {
       state.page = 1;
       return load();

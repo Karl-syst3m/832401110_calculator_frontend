@@ -1,12 +1,12 @@
-# 依赖（本项目前端零运行时依赖，此目录通常不会存在）
+# Dependencies (this frontend has zero runtime dependencies, so this directory normally does not exist)
 node_modules/
 
-# 编辑器 / 系统
+# Editor / OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 
-# 日志
+# Logs
 *.log
 npm-debug.log*

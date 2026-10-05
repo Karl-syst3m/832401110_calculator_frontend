@@ -1,20 +1,20 @@
 /* =============================================================================
- * 前后端分离计算器 —— 样式表
+ * Front-end / back-end separated calculator — stylesheet
  *
- * 命名约定：BEM（Block__Element--Modifier）
- *   块     .keypad           独立的功能单元
- *   元素   .keypad__item     块的组成部分，不单独使用
- *   修饰符 .key--operator    同一元素的不同形态
- * 采用 BEM 的目的是让类名自带层级信息，避免出现 .red .big .left 这类
- * 「描述外观而非语义」的类名——外观一旦调整，类名就变成谎言。
+ * Naming convention: BEM (Block__Element--Modifier)
+ *   Block    .keypad          a self-contained functional unit
+ *   Element  .keypad__item    a part of a block, never used on its own
+ *   Modifier .key--operator   a different form of the same element
+ * BEM is adopted so that class names carry their own hierarchy information, avoiding
+ * class names such as .red .big .left that describe appearance rather than semantics — a name of that kind becomes a lie the moment the appearance is adjusted.
  *
- * 主题方案：CSS 自定义属性（变量）+ data-theme 属性切换。
- * 所有颜色只在这里定义一次，组件样式只引用变量，
- * 因此新增一个主题只需要再写一组变量，不必改动任何组件规则。
+ * Theming: CSS custom properties (variables) + switching through the data-theme attribute.
+ * Every color is defined only here, and component styles only reference the variables,
+ * so adding a theme requires nothing more than another set of variables, without touching any component rule.
  * ========================================================================== */
 
 /* ---------------------------------------------------------------------------
- * 主题变量
+ * Theme variables
  * ------------------------------------------------------------------------ */
 :root {
   color-scheme: light;
@@ -63,7 +63,7 @@
 }
 
 /* ---------------------------------------------------------------------------
- * 基础重置与排版
+ * Base reset and typography
  * ------------------------------------------------------------------------ */
 *,
 *::before,
@@ -86,7 +86,7 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
   font-size: 15px;
   line-height: 1.6;
-  /* 主题切换时颜色平滑过渡，避免闪烁感 */
+  /* Transition the colors smoothly on a theme switch, to avoid a flickering impression */
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -114,7 +114,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 顶部栏
+ * Header
  * ------------------------------------------------------------------------ */
 .app-header {
   display: flex;
@@ -144,7 +144,7 @@ button {
   gap: 10px;
 }
 
-/* 后端状态指示灯 */
+/* Backend status indicator */
 .status {
   display: inline-flex;
   align-items: center;
@@ -183,7 +183,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 主体布局
+ * Main layout
  * ------------------------------------------------------------------------ */
 .app-main {
   flex: 1;
@@ -193,7 +193,7 @@ button {
   padding: 20px 24px 40px;
 }
 
-/* 标签页 */
+/* Tabs */
 .tabs {
   display: flex;
   gap: 4px;
@@ -248,7 +248,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 卡片
+ * Cards
  * ------------------------------------------------------------------------ */
 .card {
   padding: 20px;
@@ -275,7 +275,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 计算面板：显示区
+ * Calculator panel: display area
  * ------------------------------------------------------------------------ */
 .display {
   padding: 16px;
@@ -361,7 +361,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 小键盘
+ * Keypad
  * ------------------------------------------------------------------------ */
 .keypad-toolbar {
   display: flex;
@@ -402,7 +402,7 @@ button {
   font-weight: 500;
   font-family: var(--font-mono);
   transition: background-color 0.12s ease, transform 0.06s ease, border-color 0.12s ease;
-  /* 防止双击选中文本导致按钮看起来「粘住」 */
+  /* Prevent a double-click text selection from making the button look "stuck" */
   user-select: none;
 }
 
@@ -448,7 +448,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 通用控件
+ * Common controls
  * ------------------------------------------------------------------------ */
 .btn {
   padding: 8px 15px;
@@ -551,7 +551,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 历史记录面板
+ * History panel
  * ------------------------------------------------------------------------ */
 .toolbar {
   display: flex;
@@ -664,14 +664,14 @@ button {
   background: color-mix(in srgb, var(--color-danger) 12%, transparent);
 }
 
-/* 已收藏状态 */
+/* Favorited state */
 .icon-btn--active {
   color: var(--color-warning);
   border-color: color-mix(in srgb, var(--color-warning) 45%, var(--color-border));
   background: color-mix(in srgb, var(--color-warning) 12%, transparent);
 }
 
-/* 出错时的说明文字 */
+/* Explanatory text shown on error */
 .is-error-text {
   color: var(--color-danger);
 }
@@ -690,7 +690,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 换算面板
+ * Conversion panel
  * ------------------------------------------------------------------------ */
 .conversion-grid {
   display: grid;
@@ -754,7 +754,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 统计面板
+ * Statistics panel
  * ------------------------------------------------------------------------ */
 .statistics-grid {
   display: grid;
@@ -788,7 +788,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 页脚
+ * Footer
  * ------------------------------------------------------------------------ */
 .app-footer {
   display: flex;
@@ -813,7 +813,7 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
- * 响应式
+ * Responsive
  * ------------------------------------------------------------------------ */
 @media (max-width: 640px) {
   .app-main {
@@ -851,7 +851,7 @@ button {
   }
 }
 
-/* 尊重系统的「减少动态效果」偏好 */
+/* Respect the system's "reduce motion" preference */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

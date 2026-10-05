@@ -1,12 +1,12 @@
 /**
- * 后端健康状态指示器。
+ * Backend health status indicator.
  *
- * 这个小组件承担一个明确的证明作用：
- * 它周期性调用 GET /api/health，把后端是否可用直接显示在界面上。
+ * This small component serves one clear demonstrative purpose:
+ * it periodically calls GET /api/health and displays whether the backend is available directly in the UI.
  *
- * 在做「停掉后端服务」这项验收时，这个指示灯会立刻变红，
- * 同时计算面板给出「无法连接后端服务」的明确提示——
- * 这正好直观地证明了「结果确实来自后端，前端自己算不出来」。
+ * During the "stop the backend service" acceptance check, this indicator turns red immediately,
+ * and the calculator panel then gives the explicit message "cannot connect to the backend service" —
+ * which is exactly the intuitive proof that "the result really comes from the backend, and the frontend cannot compute it on its own".
  */
 
 import { api } from './api.js';
@@ -29,12 +29,12 @@ export function createHealthIndicator() {
     try {
       const response = await api.health();
       const historyCount = response.historyCount ?? 0;
-      setStatus('ok', `后端正常 · ${historyCount} 条记录`);
+      setStatus('ok', `Backend OK · ${historyCount} records`);
     } catch (error) {
       if (error.code === 'TIMEOUT') {
-        setStatus('down', '后端超时');
+        setStatus('down', 'Backend timed out');
       } else {
-        setStatus('down', '后端未连接');
+        setStatus('down', 'Backend not connected');
       }
     }
   }
@@ -42,8 +42,8 @@ export function createHealthIndicator() {
   return {
     start() {
       check();
-      // setInterval 在页面被切到后台时仍会运行，对一个 30 秒一次的健康检查来说
-      // 开销可以忽略，因此不额外做可见性判断。
+      // setInterval keeps running even when the page is moved to the background, and for a health check that runs once every 30 seconds
+      // the cost is negligible, so no extra visibility check is made.
       timerId = window.setInterval(check, config.healthCheckIntervalMs);
     },
     stop() {

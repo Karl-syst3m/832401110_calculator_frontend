@@ -1,35 +1,35 @@
 /**
- * 前端配置。
+ * Frontend configuration.
  *
- * 唯一需要按部署环境改动的地方就在这个文件里。
+ * This is the only place that has to be changed for a deployment environment, and it is this file.
  *
- * 接口地址的解析规则（按优先级从高到低）：
- *   1. URL 查询参数 ?api=http://example.com/api  —— 便于临时指向另一台后端做测试；
- *   2. 全局变量 window.__CALCULATOR_CONFIG__.apiBaseUrl —— 便于在 index.html 里写死；
- *   3. 自动推断：
- *        - 页面通过 file:// 打开                        -> 本地后端 http://127.0.0.1:5000/api
- *        - 页面跑在本机（localhost / 127.0.0.1）的开发端口 -> 同主机的 5000 端口
- *        - 其余情况（含 nginx 同源部署、用公网 IP 访问）  -> 同源 /api
+ * Resolution rules for the API base URL (highest priority first):
+ *   1. URL query parameter ?api=http://example.com/api — handy for temporarily pointing at another backend for testing;
+ *   2. global variable window.__CALCULATOR_CONFIG__.apiBaseUrl — handy for hard-coding it in index.html;
+ *   3. Automatic inference:
+ *        - the page was opened through file://                        -> local backend http://127.0.0.1:5000/api
+ *        - the page runs on this machine (localhost / 127.0.0.1) on a development port -> port 5000 on the same host
+ *        - every other case (including same-origin nginx deployment and access through a public IP)  -> same-origin /api
  *
- * 为什么默认走「同源 /api」？
- * 生产部署时 nginx 会把 /api/ 反向代理到后端，前端与接口同源，
- * 浏览器根本不会发起跨域请求，因此既不需要配 CORS，也不会因为
- * 写死了 IP 导致换域名后前端全部报错。
+ * Why default to the same-origin /api?
+ * In production, nginx reverse-proxies /api/ to the backend, so the frontend and the API are same-origin,
+ * and the browser never issues a cross-origin request at all, so there is no need to configure CORS and no risk that
+ * a hard-coded IP makes the whole frontend fail after the domain changes.
  *
- * 注意第 3 条里的「本机」这个限定条件，它很关键：
- * 判断开发环境必须同时看**主机名**与端口，不能只看端口。
- * 曾经只判断端口，结果是当站点部署在 :8080 上时，
- * 前端误以为自己跑在开发环境，转而请求 http://<公网IP>:5000/api，
- * 既造成跨域失败，又迫使后端端口必须对外开放。
+ * Note the "on this machine" qualifier in rule 3, which is essential:
+ * detecting a development environment must look at the **hostname** and the port at the same time, not at the port alone.
+ * The port alone used to be checked, and the consequence was that when the site was deployed on :8080,
+ * the frontend wrongly believed it was running in a development environment and requested http://<public IP>:5000/api instead,
+ * which both caused a cross-origin failure and forced the backend port to be exposed to the outside.
  */
 
-/** 这些端口视为「本地开发用的静态服务端口」。 */
+/** These ports are treated as "static server ports used for local development". */
 const DEVELOPMENT_PORTS = new Set(['5500', '8080', '5173', '3000', '8000']);
 
-/** 本地开发时后端监听的地址。 */
+/** The address the backend listens on during local development. */
 const LOCAL_BACKEND = 'http://127.0.0.1:5000/api';
 
-/** 判断页面是否运行在本机。只有本机才需要「开发端口 -> 后端 5000」这条兜底规则。 */
+/** Determine whether the page is running on this machine. The "development port -> backend on 5000" fallback rule is needed only on this machine. */
 function isLocalHostname(hostname) {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname === '::1';
 }
@@ -39,25 +39,25 @@ function stripTrailingSlash(value) {
 }
 
 function resolveApiBaseUrl() {
-  // 1. 查询参数覆盖
+  // 1. Query parameter override
   const fromQuery = new URLSearchParams(window.location.search).get('api');
   if (typeof fromQuery === 'string' && fromQuery.trim() !== '') {
     return stripTrailingSlash(fromQuery.trim());
   }
 
-  // 2. 全局配置覆盖
+  // 2. Global configuration override
   const fromGlobal = window.__CALCULATOR_CONFIG__?.apiBaseUrl;
   if (typeof fromGlobal === 'string' && fromGlobal.trim() !== '') {
     return stripTrailingSlash(fromGlobal.trim());
   }
 
-  // 3. 自动推断
+  // 3. Automatic inference
   const { protocol, hostname, port } = window.location;
   if (protocol === 'file:') {
     return LOCAL_BACKEND;
   }
-  // 只有「确实跑在本机」且「端口是开发端口」时，才认为后端在 5000。
-  // 两者必须同时满足：公网 IP 上的 :8080 是同源部署，不是本地开发。
+  // Only when the page really runs on this machine and the port is a development port is the backend assumed to be on 5000.
+  // Both conditions must hold at the same time: :8080 on a public IP is a same-origin deployment, not local development.
   if (isLocalHostname(hostname) && DEVELOPMENT_PORTS.has(port)) {
     return `${protocol}//${hostname}:5000/api`;
   }
@@ -65,16 +65,16 @@ function resolveApiBaseUrl() {
 }
 
 export const config = {
-  /** 后端接口根地址 */
+  /** Backend API root address */
   apiBaseUrl: resolveApiBaseUrl(),
 
-  /** 单次请求超时时间（毫秒）。后端无响应时不能让界面一直转圈。 */
+  /** Timeout for a single request (milliseconds). The UI must not keep spinning when the backend does not respond. */
   requestTimeoutMs: 10000,
 
-  /** 后端健康检查轮询间隔（毫秒） */
+  /** Polling interval of the backend health check (milliseconds) */
   healthCheckIntervalMs: 30000,
 
-  /** 历史记录搜索的防抖延迟（毫秒） */
+  /** Debounce delay for the history search (milliseconds) */
   searchDebounceMs: 300,
 };
 

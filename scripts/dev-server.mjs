@@ -1,17 +1,17 @@
 /**
- * 零依赖静态文件服务器 —— 仅供本地开发使用。
+ * Zero-dependency static file server — for local development only.
  *
- * 为什么需要它？
- * 前端用了 ES Module（`<script type="module">`），浏览器出于安全考虑
- * 禁止通过 file:// 协议加载模块，直接双击 index.html 会报 CORS 错误。
- * 因此本地开发必须有一个 HTTP 服务来托管静态文件。
+ * Why is it needed?
+ * The frontend uses ES Modules (`<script type="module">`), and for security reasons the browser
+ * forbids loading modules over the file:// protocol, so double-clicking index.html directly raises a CORS error.
+ * Local development therefore requires an HTTP service to host the static files.
  *
- * 为什么不用 `npx serve` 或 Live Server？
- * 本项目的作业要求里有「技术要合理、不要不必要地依赖本地环境」这一条。
- * 这个脚本只用 Node 内置模块，克隆下来就能跑，不需要联网装任何东西，
- * 助教验收时也不会因为下载超时而卡住。
+ * Why not use `npx serve` or Live Server?
+ * The assignment requirements for this project include the item "the technology must be reasonable; do not depend on the local environment unnecessarily".
+ * This script uses only Node built-in modules, so it runs as soon as the repository is cloned, without installing anything over the network,
+ * and grading by the teaching assistant will not stall on a download timeout.
  *
- * 用法：node scripts/dev-server.mjs [端口]
+ * Usage: node scripts/dev-server.mjs [port]
  */
 
 import http from 'node:http';
@@ -24,7 +24,7 @@ const documentRoot = path.join(projectRoot, 'src');
 const port = Number(process.argv[2]) || 5500;
 const host = '127.0.0.1';
 
-/** 扩展名到 MIME 类型的映射。只列本项目会用到的几种。 */
+/** Mapping from file extension to MIME type. Only the few this project uses are listed. */
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -42,13 +42,13 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((request, response) => {
-  // 只解析路径部分，忽略查询字符串（?api=... 这类参数不需要参与文件查找）。
+  // Parse only the path part and ignore the query string (parameters such as ?api=... do not take part in file lookup).
   const requestPath = decodeURIComponent(new URL(request.url, `http://${host}`).pathname);
   const relativePath = requestPath === '/' ? 'index.html' : requestPath.slice(1);
   const filePath = path.join(documentRoot, relativePath);
 
-  // 目录穿越防护：把解析后的绝对路径与文档根目录比对，
-  // 防止请求 /../../etc/passwd 之类的路径读到项目外部的文件。
+  // Directory traversal protection: compare the resolved absolute path against the document root,
+  // preventing a request such as /../../etc/passwd from reading files outside the project.
   const normalizedRoot = path.resolve(documentRoot);
   const normalizedFile = path.resolve(filePath);
   if (normalizedFile !== normalizedRoot && !normalizedFile.startsWith(normalizedRoot + path.sep)) {
@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
     const extension = path.extname(normalizedFile).toLowerCase();
     response.writeHead(200, {
       'Content-Type': MIME_TYPES[extension] ?? 'application/octet-stream',
-      // 开发阶段禁用缓存，改完代码刷新就能看到效果。
+      // Disable caching during development, so a refresh after a code change shows the effect immediately.
       'Cache-Control': 'no-store',
     });
     fs.createReadStream(normalizedFile).pipe(response);
@@ -76,10 +76,10 @@ const server = http.createServer((request, response) => {
 
 server.listen(port, host, () => {
   const url = `http://${host}:${port}`;
-  console.log('前端开发服务器已启动');
-  console.log(`  页面地址: ${url}`);
-  console.log(`  静态根目录: ${documentRoot}`);
+  console.log('Frontend development server started');
+  console.log(`  Page URL: ${url}`);
+  console.log(`  Static root: ${documentRoot}`);
   console.log('');
-  console.log('请确认后端已在 5000 端口运行（cd calculator_backend && npm start）。');
-  console.log('按 Ctrl+C 停止。');
+  console.log('Make sure the backend is running on port 5000 (cd calculator_backend && npm start).');
+  console.log('Press Ctrl+C to stop.');
 });

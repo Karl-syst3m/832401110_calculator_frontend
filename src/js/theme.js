@@ -1,9 +1,9 @@
 /**
- * 主题切换（扩展功能）。
+ * Theme switching (extension feature).
  *
- * 用 localStorage 记住用户选择是合理的：主题偏好属于「界面设置」，
- * 与作业要求「计算历史必须存后端数据库」并不冲突——
- * 历史记录一条都没有放在前端存储里。
+ * Remembering the user's choice in localStorage is reasonable: a theme preference is a "UI setting",
+ * and it does not conflict with the assignment requirement that "calculation history must be stored in the backend database" —
+ * not a single history record is kept in frontend storage.
  */
 
 const STORAGE_KEY = 'calculator.theme';
@@ -14,7 +14,7 @@ function readStoredTheme() {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     return THEMES.includes(stored) ? stored : null;
   } catch {
-    // 隐私模式下 localStorage 可能不可用，降级为「跟随系统」即可，不应报错。
+    // In private mode localStorage may be unavailable; falling back to "follow the system" is enough and must not raise an error.
     return null;
   }
 }
@@ -23,7 +23,7 @@ function storeTheme(theme) {
   try {
     window.localStorage.setItem(STORAGE_KEY, theme);
   } catch {
-    /* 忽略写入失败 */
+    /* Ignore a failed write */
   }
 }
 
@@ -55,8 +55,8 @@ export function toggleTheme() {
 }
 
 /**
- * 初始化主题。
- * 优先级：用户显式选择 > 系统偏好。
+ * Initialize the theme.
+ * Priority: an explicit user choice > the system preference.
  */
 export function initTheme() {
   setTheme(readStoredTheme() ?? detectPreferredTheme());

@@ -1,10 +1,10 @@
 /**
- * 统计面板视图（扩展功能）。
+ * Statistics panel view (extension feature).
  *
- * 所有指标都由后端用 SQL 聚合后返回（GET /api/history/stats），
- * 前端只负责把数字摆放成卡片。平均值、去重计数这类运算若放在前端做，
- * 就必须先把全部历史记录拉到浏览器里，数据量一大就会卡，
- * 而且又变成了「前端在算」。
+ * All metrics are aggregated by the backend with SQL and returned (GET /api/history/stats),
+ * and the frontend is responsible only for laying the numbers out as cards. If operations such as averages and distinct counts were performed in the frontend,
+ * the entire history would first have to be pulled into the browser, which would stutter as soon as the data volume grew,
+ * and it would again become "the frontend doing the calculating".
  */
 
 import { api } from './api.js';
@@ -16,27 +16,27 @@ export function createStatisticsView() {
   const errorElement = $('#statistics-error');
   const refreshButton = $('#statistics-refresh');
 
-  /** 把统计结果整理成卡片列表。[标签, 数值, 是否强调] */
+  /** Arrange the statistics into a list of cards. [label, value, whether to accent it] */
   function buildCards(stats) {
     const formatNumber = (value, digits = 2) =>
       value === null || value === undefined ? '—' : Number(value).toFixed(digits);
 
     return [
-      ['总记录数', String(stats.total), true],
-      ['今日计算', String(stats.today), false],
-      ['收藏数量', String(stats.favorites), false],
-      ['不同表达式', String(stats.distinctExpressions), false],
-      ['结果平均值', stats.averageResult === null ? '—' : formatNumber(stats.averageResult, 4), false],
+      ['Total records', String(stats.total), true],
+      ['Calculations today', String(stats.today), false],
+      ['Favorites', String(stats.favorites), false],
+      ['Distinct expressions', String(stats.distinctExpressions), false],
+      ['Average result', stats.averageResult === null ? '—' : formatNumber(stats.averageResult, 4), false],
       [
-        '最常计算',
+        'Most frequent',
         stats.mostFrequentExpression === null
           ? '—'
-          : `${stats.mostFrequentExpression}（${stats.mostFrequentCount} 次）`,
+          : `${stats.mostFrequentExpression} (${stats.mostFrequentCount} times)`,
         false,
       ],
-      ['首次计算', stats.firstAt === null ? '—' : stats.firstAt.replace('T', ' ').slice(0, 19), false],
-      ['最近计算', stats.latestAt === null ? '—' : stats.latestAt.replace('T', ' ').slice(0, 19), false],
-      ['统计时区', stats.timezone ?? 'UTC', false],
+      ['First calculation', stats.firstAt === null ? '—' : stats.firstAt.replace('T', ' ').slice(0, 19), false],
+      ['Latest calculation', stats.latestAt === null ? '—' : stats.latestAt.replace('T', ' ').slice(0, 19), false],
+      ['Statistics time zone', stats.timezone ?? 'UTC', false],
     ];
   }
 
@@ -63,7 +63,7 @@ export function createStatisticsView() {
       render(response.stats);
     } catch (error) {
       gridElement.replaceChildren();
-      errorElement.textContent = `统计加载失败：${describeError(error)}`;
+      errorElement.textContent = `Failed to load statistics: ${describeError(error)}`;
       show(errorElement);
     } finally {
       refreshButton.disabled = false;
