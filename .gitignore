@@ -1,0 +1,12 @@
+# 依赖（本项目前端零运行时依赖，此目录通常不会存在）
+node_modules/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+npm-debug.log*

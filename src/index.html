@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="前后端分离架构的计算器系统前端。所有数值计算均通过 HTTP 接口由后端完成。" />
+  <title>计算器 · 前后端分离</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <!-- ============ 顶部：标题 / 后端状态 / 主题切换 ============ -->
+  <header class="app-header">
+    <div class="app-header__brand">
+      <h1 class="app-header__title">计算器</h1>
+      <p class="app-header__subtitle">前后端分离架构 · 所有计算由后端完成</p>
+    </div>
+    <div class="app-header__actions">
+      <!--
+        后端状态指示灯。
+        它的作用不只是好看：这一项直接证明「前端依赖后端」——
+        后端停掉时它会变红，同时计算功能会给出明确的失败提示，
+        而不是偷偷在前端把结果算出来。
+      -->
+      <span id="backend-status" class="status status--unknown" title="后端服务健康状态">
+        <span class="status__dot" aria-hidden="true"></span>
+        <span id="backend-status-text" class="status__text">检测中…</span>
+      </span>
+      <button id="theme-toggle" class="btn btn--ghost" type="button" title="切换主题（Ctrl/Cmd + D）">
+        <span id="theme-toggle-icon" aria-hidden="true">🌙</span>
+        <span>主题</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- ============ 标签页导航 ============ -->
+    <nav class="tabs" role="tablist" aria-label="功能切换">
+      <button class="tabs__item is-active" type="button" role="tab" data-tab="calculator" aria-selected="true">
+        计算
+      </button>
+      <button class="tabs__item" type="button" role="tab" data-tab="history" aria-selected="false">
+        历史记录
+      </button>
+      <button class="tabs__item" type="button" role="tab" data-tab="conversion" aria-selected="false">
+        换算
+      </button>
+      <button class="tabs__item" type="button" role="tab" data-tab="statistics" aria-selected="false">
+        统计
+      </button>
+    </nav>
+
+    <!-- ==================== 面板一：计算 ==================== -->
+    <section id="panel-calculator" class="panel is-active" role="tabpanel" aria-label="计算">
+      <div class="card calculator">
+        <!-- 表达式输入与结果显示 -->
+        <div class="display">
+          <label class="display__label" for="expression-input">表达式</label>
+          <input
+            id="expression-input"
+            class="display__input"
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+            placeholder="例如 (1+2)*3、sqrt(16)、12×8"
+          />
+          <div class="display__result-row">
+            <span class="display__result-label">结果</span>
+            <output id="result-output" class="display__result" aria-live="polite">—</output>
+          </div>
+          <!--
+            错误提示区。文案由后端返回的 code 决定（见 js/errorMessages.js），
+            也就是「哪里错了」这件事完全由后端判定，前端只负责翻译成人话。
+          -->
+          <p id="error-message" class="display__error" role="alert" hidden></p>
+        </div>
+
+        <div class="keypad-toolbar">
+          <button id="scientific-toggle" class="btn btn--ghost" type="button" aria-pressed="false">
+            科学键盘
+          </button>
+          <span class="hint">支持键盘输入 · 回车计算 · Esc 清空 · 退格删除</span>
+        </div>
+
+        <!-- 科学计算扩展键盘 -->
+        <div id="keypad-scientific" class="keypad keypad--scientific" hidden>
+          <button class="key key--fn" type="button" data-insert="sin(" title="正弦">sin</button>
+          <button class="key key--fn" type="button" data-insert="cos(" title="余弦">cos</button>
+          <button class="key key--fn" type="button" data-insert="tan(" title="正切">tan</button>
+          <button class="key key--fn" type="button" data-insert="sqrt(" title="平方根">√</button>
+          <button class="key key--fn" type="button" data-insert="^" title="乘方">x<sup>y</sup></button>
+          <button class="key key--fn" type="button" data-insert="ln(" title="自然对数">ln</button>
+          <button class="key key--fn" type="button" data-insert="log(" title="常用对数">log</button>
+          <button class="key key--fn" type="button" data-insert="abs(" title="绝对值">|x|</button>
+          <button class="key key--fn" type="button" data-insert="fact(" title="阶乘">n!</button>
+          <button class="key key--fn" type="button" data-insert="pi" title="圆周率">π</button>
+          <button class="key key--fn" type="button" data-insert="e" title="自然对数底数">e</button>
+          <button class="key key--fn" type="button" data-insert="mod(" title="取余">mod</button>
+          <button class="key key--fn" type="button" data-insert="round(" title="四舍五入">round</button>
+          <button class="key key--fn" type="button" data-insert="max(" title="最大值">max</button>
+          <button class="key key--fn" type="button" data-insert="min(" title="最小值">min</button>
+        </div>
+
+        <!-- 主键盘 -->
+        <div class="keypad keypad--main">
+          <button class="key key--action" type="button" data-action="clear" title="清空（Esc）">C</button>
+          <button class="key key--action" type="button" data-insert="(" title="左括号">(</button>
+          <button class="key key--action" type="button" data-insert=")" title="右括号">)</button>
+          <button class="key key--action" type="button" data-action="backspace" title="退格（Backspace）">⌫</button>
+
+          <button class="key" type="button" data-insert="7">7</button>
+          <button class="key" type="button" data-insert="8">8</button>
+          <button class="key" type="button" data-insert="9">9</button>
+          <button class="key key--operator" type="button" data-insert="÷" title="除">÷</button>
+
+          <button class="key" type="button" data-insert="4">4</button>
+          <button class="key" type="button" data-insert="5">5</button>
+          <button class="key" type="button" data-insert="6">6</button>
+          <button class="key key--operator" type="button" data-insert="×" title="乘">×</button>
+
+          <button class="key" type="button" data-insert="1">1</button>
+          <button class="key" type="button" data-insert="2">2</button>
+          <button class="key" type="button" data-insert="3">3</button>
+          <button class="key key--operator" type="button" data-insert="−" title="减">−</button>
+
+          <button class="key" type="button" data-insert="0">0</button>
+          <button class="key" type="button" data-insert=".">.</button>
+          <!-- 等号只做一件事：把表达式发给后端。它内部没有任何计算逻辑。 -->
+          <button id="calculate-button" class="key key--equals" type="button" data-action="calculate" title="计算（回车）">
+            =
+          </button>
+          <button class="key key--operator" type="button" data-insert="+" title="加">+</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 面板二：历史记录 ==================== -->
+    <section id="panel-history" class="panel" role="tabpanel" aria-label="历史记录">
+      <div class="card">
+        <div class="toolbar">
+          <input id="history-search" class="input" type="search" placeholder="搜索表达式或结果…" />
+          <label class="checkbox">
+            <input id="history-favorite-only" type="checkbox" />
+            <span>仅看收藏</span>
+          </label>
+          <select id="history-sort" class="input input--select" aria-label="排序方式">
+            <option value="createdAt:desc">最新在前</option>
+            <option value="createdAt:asc">最早在前</option>
+            <option value="result:desc">结果从大到小</option>
+            <option value="result:asc">结果从小到大</option>
+          </select>
+          <select id="history-page-size" class="input input--select" aria-label="每页条数">
+            <option value="10">每页 10 条</option>
+            <option value="20" selected>每页 20 条</option>
+            <option value="50">每页 50 条</option>
+          </select>
+          <button id="history-refresh" class="btn" type="button">刷新</button>
+          <button id="history-clear" class="btn btn--danger" type="button">清空全部</button>
+        </div>
+
+        <p id="history-summary" class="muted"></p>
+
+        <!-- 历史列表由 js/historyView.js 渲染，数据全部来自 GET /api/history -->
+        <ul id="history-list" class="history-list"></ul>
+        <p id="history-empty" class="empty" hidden>还没有计算记录。去「计算」页面算一道题，它就会出现在这里。</p>
+
+        <div class="pagination">
+          <button id="history-prev" class="btn" type="button">上一页</button>
+          <span id="history-page-info" class="muted"></span>
+          <button id="history-next" class="btn" type="button">下一页</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 面板三：换算 ==================== -->
+    <section id="panel-conversion" class="panel" role="tabpanel" aria-label="换算">
+      <div class="conversion-grid">
+        <!-- 进制换算 -->
+        <div class="card">
+          <h2 class="card__title">进制换算</h2>
+          <p class="card__desc">整数部分使用 BigInt 精确转换，不受 JavaScript 安全整数范围限制。</p>
+          <div class="form-row">
+            <label class="field">
+              <span class="field__label">数值</span>
+              <input id="base-value" class="input" type="text" value="255" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span class="field__label">源进制</span>
+              <select id="base-from" class="input input--select"></select>
+            </label>
+            <label class="field">
+              <span class="field__label">目标进制</span>
+              <select id="base-to" class="input input--select"></select>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button id="base-convert" class="btn btn--primary" type="button">换算</button>
+            <button id="base-swap" class="btn btn--ghost" type="button">交换进制</button>
+          </div>
+          <div class="conversion-result">
+            <span class="conversion-result__label">结果</span>
+            <output id="base-result" class="conversion-result__value">—</output>
+          </div>
+          <p id="base-error" class="field-error" role="alert" hidden></p>
+        </div>
+
+        <!-- 单位换算 -->
+        <div class="card">
+          <h2 class="card__title">单位换算</h2>
+          <p class="card__desc">类别与单位清单由后端接口提供，前端不维护换算规则。</p>
+          <div class="form-row">
+            <label class="field">
+              <span class="field__label">类别</span>
+              <select id="unit-category" class="input input--select"></select>
+            </label>
+            <label class="field">
+              <span class="field__label">数值</span>
+              <input id="unit-value" class="input" type="text" value="1" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span class="field__label">源单位</span>
+              <select id="unit-from" class="input input--select"></select>
+            </label>
+            <label class="field">
+              <span class="field__label">目标单位</span>
+              <select id="unit-to" class="input input--select"></select>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button id="unit-convert" class="btn btn--primary" type="button">换算</button>
+            <button id="unit-swap" class="btn btn--ghost" type="button">交换单位</button>
+          </div>
+          <div class="conversion-result">
+            <span class="conversion-result__label">结果</span>
+            <output id="unit-result" class="conversion-result__value">—</output>
+          </div>
+          <p id="unit-error" class="field-error" role="alert" hidden></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 面板四：统计 ==================== -->
+    <section id="panel-statistics" class="panel" role="tabpanel" aria-label="统计">
+      <div class="card">
+        <div class="toolbar toolbar--end">
+          <h2 class="card__title card__title--inline">使用统计</h2>
+          <button id="statistics-refresh" class="btn" type="button">刷新</button>
+        </div>
+        <p class="card__desc">
+          全部指标由后端 SQL 聚合得出（GET /api/history/stats）。「今日」按 UTC 日界统计。
+        </p>
+        <div id="statistics-grid" class="statistics-grid"></div>
+        <p id="statistics-error" class="field-error" role="alert" hidden></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span>前端：原生 HTML / CSS / JavaScript（无构建步骤）</span>
+    <span class="app-footer__sep">·</span>
+    <span>后端：Node.js + Express + SQLite</span>
+    <span class="app-footer__sep">·</span>
+    <a id="api-docs-link" href="#" target="_blank" rel="noopener">接口地址</a>
+  </footer>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

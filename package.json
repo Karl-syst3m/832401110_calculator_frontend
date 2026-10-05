@@ -1,0 +1,21 @@
+{
+  "name": "calculator-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "前后端分离计算器系统 - 前端（原生 HTML / CSS / JavaScript，无构建步骤）",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node scripts/dev-server.mjs",
+    "start": "node scripts/dev-server.mjs",
+    "test": "node --test"
+  },
+  "keywords": [
+    "calculator",
+    "vanilla-javascript",
+    "front-end-back-end-separation"
+  ],
+  "license": "MIT"
+}
